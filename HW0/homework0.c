@@ -9,7 +9,7 @@ Description: Prints the SHA256 hashed "flag" based on a salted email.
 #include <stdlib.h>
 #include <openssl/sha.h>
 
-const char EMAIL_ADDRESS[] = "nc2798@nyu.edu";
+const char EMAIL_ADDRESS[] = R"(nc2798@nyu.edu)";
 
 static void generate_sha256_flag(const char *email, const char *salt, char *output) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
