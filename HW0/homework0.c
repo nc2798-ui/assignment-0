@@ -9,64 +9,53 @@ Description: Prints the SHA256 hashed "flag" based on a salted email.
 #include <stdlib.h>
 #include <openssl/sha.h>
 
-// Declare a constant string for the user's email address
-const char EMAIL_ADDRESS[] = "nc2798@nyu.edu"; // Replace with your email
+const char EMAIL_ADDRESS[] = "nc2798@nyu.edu";
 
-// Function to generate a SHA256 hash
-void generate_sha256_flag(const char *email, const char *salt, char *output) {
+static void generate_sha256_flag(const char *email, const char *salt, char *output) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
-    char input[512]; // Buffer to combine email and salt
-    int i;
-
-    // Combine the email and salt into the input buffer
+    char input[512]; // email + salt
     snprintf(input, sizeof(input), "%s%s", email, salt);
-
-    // Compute the SHA256 hash
     SHA256((unsigned char *)input, strlen(input), hash);
-
-    // Convert the hash to a hexadecimal string
-    for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         snprintf(output + (i * 2), 3, "%02x", hash[i]);
     }
-
-    // Null-terminate the output string
     output[SHA256_DIGEST_LENGTH * 2] = '\0';
 }
 
-int main() {
-    char flag[SHA256_DIGEST_LENGTH * 2 + 1]; // Buffer to store the flag (hex string)
-    char salt[256]; // Buffer to store the salt read from the file
-    FILE *salt_file;
-
-    // Open the salt file for reading
-    salt_file = fopen("assignment_salt.txt", "r");
-    if (!salt_file) {
-        perror("Error opening salt file");
-        return EXIT_FAILURE;
-    }
-
-    // Read the salt from the file
-    if (!fgets(salt, sizeof(salt), salt_file)) {
-        perror("Error reading salt file");
-        fclose(salt_file);
-        return EXIT_FAILURE;
-    }
-
-    // Remove trailing newline character if present
-    size_t len = strlen(salt);
-    if (len > 0 && salt[len - 1] == '\n') {
-        salt[len - 1] = '\0';
-    }
-
-    fclose(salt_file);
-
-    // Generate the hashed flag
-    generate_sha256_flag(EMAIL_ADDRESS, salt, flag);
-
-    // Print the email address and the flag
-    printf("Email address: %s\n", EMAIL_ADDRESS);
-    printf("Your flag is: %s\n", flag);
-
-    return 0;
+static int read_salt_into(char *buf, size_t bufsz, const char *path) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return 0;
+    if (!fgets(buf, bufsz, fp)) { fclose(fp); return 0; }
+    fclose(fp);
+    // trim trailing newline or CRLF
+    size_t n = strlen(buf);
+    while (n && (buf[n-1] == '\n' || buf[n-1] == '\r')) { buf[--n] = '\0'; }
+    return 1;
 }
 
+int main(int argc, char **argv) {
+    char salt[256];
+    const char *candidates[] = {
+        argc > 1 ? argv[1] : NULL,
+        "HW0/assignment_salt.txt",
+        "assign_0/HW0/assignment_salt.txt",
+        "./assignment_salt.txt",
+        NULL
+    };
+
+    int ok = 0;
+    for (int i = 0; candidates[i]; i++) {
+        if (candidates[i] && read_salt_into(salt, sizeof(salt), candidates[i])) { ok = 1; break; }
+    }
+    if (!ok) {
+        fprintf(stderr, "Error opening salt file\n");
+        return EXIT_FAILURE;
+    }
+
+    char flag[SHA256_DIGEST_LENGTH * 2 + 1];
+    generate_sha256_flag(EMAIL_ADDRESS, salt, flag);
+
+    // print only the hash followed by a newline
+    puts(flag);
+    return 0;
+}

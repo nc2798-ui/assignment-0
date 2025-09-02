@@ -14,4 +14,4 @@ RUN apt-get update && apt-get install -y libssl-dev
 RUN gcc -o HomeWork0 homework0.c -lssl -lcrypto
 
 # Run the compiled program
-CMD ["./HomeWork0"]
+CMD ["./HomeWork0", "assignment_salt.txt"]
