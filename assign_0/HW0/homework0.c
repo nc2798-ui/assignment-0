@@ -10,7 +10,7 @@ Description: Prints the SHA256 hashed "flag" based on a salted email.
 #include <openssl/sha.h>
 
 // Declare a constant string for the user's email address
-const char EMAIL_ADDRESS[] = "user@nyu.edu"; // Replace with your email
+const char EMAIL_ADDRESS[] = "nc2798@nyu.edu"; // Replace with your email
 
 // Function to generate a SHA256 hash
 void generate_sha256_flag(const char *email, const char *salt, char *output) {
